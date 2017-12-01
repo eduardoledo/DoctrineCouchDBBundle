@@ -21,7 +21,9 @@
 namespace Doctrine\Bundle\CouchDBBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\Alias;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\DefinitionDecorator;
@@ -63,8 +65,8 @@ class DoctrineCouchDBExtension extends AbstractDoctrineExtension
 
     private function clientLoad($config, ContainerBuilder $container)
     {
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('client.xml');
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+        $loader->load('client.yml');
 
         if (empty($config['default_connection'])) {
             $keys = array_keys($config['connections']);
@@ -89,7 +91,7 @@ class DoctrineCouchDBExtension extends AbstractDoctrineExtension
     protected function loadClientConnection($name, array $connection, ContainerBuilder $container)
     {
         $container
-            ->setDefinition(sprintf('doctrine_couchdb.client.%s_connection', $name), new DefinitionDecorator('doctrine_couchdb.client.connection'))
+            ->setDefinition(sprintf('doctrine_couchdb.client.%s_connection', $name), new ChildDefinition('doctrine_couchdb.client.connection'))
             ->setArguments(array(
                 $connection,
             ))
@@ -97,8 +99,8 @@ class DoctrineCouchDBExtension extends AbstractDoctrineExtension
 
         if (isset($connection['logging']) && $connection['logging'] === true) {
             $def = new Definition('Doctrine\CouchDB\HTTP\Client');
-            $def->setFactoryService(sprintf('doctrine_couchdb.client.%s_connection', $name));
-            $def->setFactoryMethod('getHttpClient');
+            $def->setFactory(sprintf('doctrine_couchdb.client.%s_connection', $name), 'getHttpClient');
+//            $def->setFactoryMethod('getHttpClient');
             $def->setPublic(false);
 
             $container->setDefinition(sprintf('doctrine_couchdb.httpclient.%s_client', $name), $def);

@@ -1,0 +1,36 @@
+parameters:
+        doctrine_couchdb.client.connection.class: Doctrine\CouchDB\CouchDBClient
+        doctrine_couchdb.datacollector.class: Doctrine\Bundle\CouchDBBundle\DataCollector\CouchDBDataCollector
+        doctrine_couchdb.couchdb.class: Doctrine\Bundle\CouchDBBundle\ManagerRegistry
+        doctrine_couchdb.connections: []
+        doctrine_couchdb.document_managers: []
+        doctrine_couchdb.default_connection: Doctrine\Bundle\CouchDBBundle\ManagerRegistry
+        doctrine_couchdb.default_document_manager:
+
+services:
+
+    doctrine_couchdb.client.connection:
+        class: "%doctrine_couchdb.client.connection.class%"
+        factory: "%doctrine_couchdb.client.connection.class%::create"
+        abstract: true
+
+    doctrine_couchdb.datacollector:
+        class: "%doctrine_couchdb.datacollector.class%"
+        tag:
+            name: "data_collector"
+            template: "DoctrineCouchDBBundle:Collector:couchdb"
+            id: "couchdb"
+
+    doctrine_couchdb:
+        class: "%doctrine_couchdb.couchdb.class%"
+        arguments:
+            - CouchDB
+            - %doctrine_couchdb.connections%
+            - %doctrine_couchdb.document_managers%
+            - %doctrine_couchdb.default_connection%
+            - %doctrine_couchdb.default_document_manager%
+            - Doctrine\ODM\CouchDB\Proxy\Proxy
+        calls:
+            - method: "setContainer"
+              arguments:
+                  - "@service_container"
